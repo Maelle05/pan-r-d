@@ -203,7 +203,7 @@ void main() {
 	float n = snoise3(vec3(offx, offy, uTime * .1) * 4.) - 1.;
 
 	float twoVideosMask = smoothstep(0.1, 0.7, n + c);
-	vec4 finalImage = mix(snoise4(video), hover, twoVideosMask);
+	vec4 finalImage = mix(video, hover, twoVideosMask);
 
 	// Add Paper effect
 	gl_FragColor = finalImage;
