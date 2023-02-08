@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
+import gsap from 'gsap'
 
 import vertexShader from './webgl/shaders/vert.glsl'
 import fragmentShader from './webgl/shaders/frag.glsl'
@@ -22,9 +23,19 @@ const scene = new THREE.Scene()
 /**
  * Textures
  */
-const textureLoader = new THREE.TextureLoader()
+// const textureLoader = new THREE.TextureLoader()
 const textureVideo1 = new THREE.VideoTexture( videoDom1 )
 const textureVideo2 = new THREE.VideoTexture( videoDom2 )
+// Size videos
+const sizeVideo1 = {
+    x: videoDom1.videoWidth / 1400,
+    y: videoDom1.videoHeight / 1400
+}
+const sizeVideo2 = {
+    x: videoDom2.videoWidth / 1400,
+    y: videoDom2.videoHeight / 1400
+}
+// console.log(sizeVideo1, sizeVideo2)
 
 /**
  * Mouse
@@ -33,8 +44,17 @@ const textureVideo2 = new THREE.VideoTexture( videoDom2 )
 let mouse = new THREE.Vector2(0, 0)
 window.addEventListener('mousemove', (ev) => { onMouseMove(ev) })
 const onMouseMove = (event) => {
-	mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+    gsap.to(mouse, 2, {
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1
+    })
+
+    if(mesh){
+        gsap.to(mesh.rotation, 2, {
+            x: -mouse.y * 0.2,
+            y: mouse.x * (Math.PI / 8)
+        })
+    }
 }
 
 /**
@@ -45,22 +65,29 @@ const geometry = new THREE.PlaneGeometry(1, 1, 32, 32)
 
 // Material
 // const material = new THREE.MeshBasicMaterial({ map: textureVideo1 })
-const material =  new THREE.RawShaderMaterial({
-  uniforms: {
+const uniforms = {
     uTex: { type: 't', value: textureVideo1 },
     uTexHover: { type: 't', value: textureVideo2 },
     uMouse: { value: mouse },
-	  uRes: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
-  },
-  vertexShader: vertexShader,
-  fragmentShader: fragmentShader,
-  transparent: true,
-  wireframe: false,
-  side: THREE.DoubleSide
+    uTime: { value: 0 },
+    uRes: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+}
+
+const material =  new THREE.RawShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertexShader,
+    fragmentShader: fragmentShader,
+    transparent: true,
+    wireframe: false,
+    side: THREE.DoubleSide,
+    defines: {
+        PR: window.devicePixelRatio.toFixed(1)
+    }
 })
 
 // Mesh
 const mesh = new THREE.Mesh(geometry, material)
+mesh.scale.set(sizeVideo1.x, sizeVideo1.y, 1)
 scene.add(mesh)
 
 /**
@@ -91,12 +118,13 @@ window.addEventListener('resize', () =>
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0.25, - 0.25, 1)
+camera.position.set(0, 0, 1)
 scene.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
+controls.enabled = false
 
 /**
  * Renderer
@@ -115,6 +143,9 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+
+    // Update shaders
+    uniforms.uTime.value += 0.01
 
     // Update controls
     controls.update()
