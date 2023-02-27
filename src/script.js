@@ -24,18 +24,23 @@ const scene = new THREE.Scene()
  * Textures
  */
 // const textureLoader = new THREE.TextureLoader()
+// const textureMask = new THREE.TextureLoader().load( '/textures/brush.png' );
+let currentTile = 8
+const horzTiles = 8
+const vertTiles = 8
+
+const textureMask = new THREE.TextureLoader().load( '/textures/sprites.png' );
+textureMask.repeat.set(1/horzTiles, 1/vertTiles)
+textureMask.offset.x = (currentTile % horzTiles) / horzTiles
+textureMask.offset.y = (vertTiles - Math.floor(currentTile / horzTiles) - 1) / vertTiles
+
 const textureVideo1 = new THREE.VideoTexture( videoDom1 )
 const textureVideo2 = new THREE.VideoTexture( videoDom2 )
 // Size videos
-const sizeVideo1 = {
-    x: videoDom1.videoWidth / 1400,
-    y: videoDom1.videoHeight / 1400
+const sizeVideo = {
+    x: videoDom1.videoWidth,
+    y: videoDom1.videoHeight
 }
-const sizeVideo2 = {
-    x: videoDom2.videoWidth / 1400,
-    y: videoDom2.videoHeight / 1400
-}
-// console.log(sizeVideo1, sizeVideo2)
 
 /**
  * Mouse
@@ -44,17 +49,10 @@ const sizeVideo2 = {
 let mouse = new THREE.Vector2(0, 0)
 window.addEventListener('mousemove', (ev) => { onMouseMove(ev) })
 const onMouseMove = (event) => {
-    gsap.to(mouse, 2, {
+    gsap.to(mouse, 1, {
         x: (event.clientX / window.innerWidth) * 2 - 1,
         y: -(event.clientY / window.innerHeight) * 2 + 1
     })
-
-    if(mesh){
-        gsap.to(mesh.rotation, 2, {
-            x: -mouse.y * 0.2,
-            y: mouse.x * (Math.PI / 8)
-        })
-    }
 }
 
 /**
@@ -68,6 +66,7 @@ const geometry = new THREE.PlaneGeometry(1, 1, 32, 32)
 const uniforms = {
     uTex: { type: 't', value: textureVideo1 },
     uTexHover: { type: 't', value: textureVideo2 },
+    uMask: { type: 't', value: textureMask },
     uMouse: { value: mouse },
     uTime: { value: 0 },
     uRes: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
@@ -87,7 +86,7 @@ const material =  new THREE.RawShaderMaterial({
 
 // Mesh
 const mesh = new THREE.Mesh(geometry, material)
-mesh.scale.set(sizeVideo1.x, sizeVideo1.y, 1)
+mesh.scale.set(sizeVideo.x / (window.innerHeight - 50), sizeVideo.y / (window.innerHeight - 50), 1)
 scene.add(mesh)
 
 /**
@@ -111,6 +110,10 @@ window.addEventListener('resize', () =>
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    // Update Uniforms
+    uniforms.uRes.value.x = window.innerWidth
+    uniforms.uRes.value.y = window.innerHeight
 })
 
 /**
