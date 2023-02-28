@@ -23,17 +23,8 @@ const scene = new THREE.Scene()
 /**
  * Textures
  */
-// const textureLoader = new THREE.TextureLoader()
-// const textureMask = new THREE.TextureLoader().load( '/textures/brush.png' );
-let currentTile = 8
-const horzTiles = 8
-const vertTiles = 8
 
-const textureMask = new THREE.TextureLoader().load( '/textures/sprites.png' );
-textureMask.repeat.set(1/horzTiles, 1/vertTiles)
-textureMask.offset.x = (currentTile % horzTiles) / horzTiles
-textureMask.offset.y = (vertTiles - Math.floor(currentTile / horzTiles) - 1) / vertTiles
-
+const texturePaper = new THREE.TextureLoader().load( '/textures/paper.jpeg' );
 const textureVideo1 = new THREE.VideoTexture( videoDom1 )
 const textureVideo2 = new THREE.VideoTexture( videoDom2 )
 // Size videos
@@ -59,14 +50,15 @@ const onMouseMove = (event) => {
  * Test mesh
  */
 // Geometry
-const geometry = new THREE.PlaneGeometry(1, 1, 32, 32)
+const geometry = new THREE.PlaneBufferGeometry(1.4, 1.4)
 
 // Material
 // const material = new THREE.MeshBasicMaterial({ map: textureVideo1 })
 const uniforms = {
     uTex: { type: 't', value: textureVideo1 },
     uTexHover: { type: 't', value: textureVideo2 },
-    uMask: { type: 't', value: textureMask },
+    uTexPaper: { type: 't', value: texturePaper },
+    tMap: { value: null },
     uMouse: { value: mouse },
     uTime: { value: 0 },
     uRes: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
@@ -104,8 +96,8 @@ window.addEventListener('resize', () =>
     sizes.height = window.innerHeight
 
     // Update camera
-    camera.aspect = sizes.width / sizes.height
-    camera.updateProjectionMatrix()
+    // camera.aspect = sizes.width / sizes.height
+    // camera.updateProjectionMatrix()
 
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
@@ -120,8 +112,7 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0, 0, 1)
+const camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 scene.add(camera)
 
 // Controls
